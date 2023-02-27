@@ -1,0 +1,134 @@
+---
+title: "Fasteignaverkefni"
+date: "3. Mars, 2023"
+output: 
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: vignette
+---
+
+```
+@Author: Halldór Jens Vilhjálmsson - hjv6@hi.is
+@Author: Jakob Þór Gunnarsson - jtg3@hi.is
+```
+# Hluti 1 - Gagnamöndl
+
+### Hlöðum inn pökkum
+```{r Pakkar, message=FALSE, warning=FALSE}
+library(readr)
+library(dplyr)
+library(knitr)
+library(tidyverse)
+library(kableExtra)
+library(ggplot2)
+library(cowplot)
+library(tidyr)
+```
+
+### Innlestur 
+```{r Innlestur gagna, message=FALSE, warning=FALSE}
+hj <- read.csv("husnaedisverd_2017_21.csv", sep=";")
+hj <- hj %>% mutate(teg_eign = factor(teg_eign))
+glimpse(hj)
+summary(hj)
+```
+
+Skrifa hér um innlestur og breyt
+
+### Svæðisskipting
+```{r Svæðisskipting}
+hverfi <- c(400, 320, 600)
+hj <- filter(hj, matssvaedi%in%hverfi)
+summary(hj)
+```
+
+Við ákváðum að nota 400, 540, og 600. Við breyttum svo gerð þeirra í flokkabreytu með viðeigandi nöfnum.
+
+### Fermetraverð
+```{r FM}
+hj <- hj %>%
+      mutate(fermetraverd = kaupverd/birtm2)
+glimpse(hj)
+```
+
+Skrifa eh hérna, muna fm er í þús kr
+
+### Tegund Fasteigna
+```{R Tegund Fasteigna}
+summary(hj)
+hj <- hj %>% mutate(teg_eign_s_i = 
+                      fct_recode(teg_eign, 
+                                 Sérbýli = 'Einbýlishús', 
+                                 Sérbýli = 'Parhús', 
+                                 Sérbýli = 'Raðhús', 
+                                 Íbúð = 'Íbúðareign'))
+summary(hj)
+```
+
+### Endurnefnd Hverfi
+```{R hverfi}
+hj$matssvaedi <- factor(hj$matssvaedi, levels=hverfi,
+            labels = c('Seltjarnarsnes', 'Kópavogur', 'Hafnafjörður'))
+summary(hj)
+```
+
+# Hluti 2 - Myndræn Framsetning
+
+### Kaupverð og Fermetragildi
+```{r, fig.align='center', fig.width=9}
+graph1 <- hj %>%
+  ggplot(aes(x=kaupverd)) + geom_histogram(color='purple', bins=50) + 
+  xlab('Kaupverð') + ylab('Fjöldi')
+
+graph2 <- hj %>%
+  ggplot(aes(x=birtm2)) + geom_histogram(color='purple', bins=50) + 
+  xlab('Fermetrar') + ylab('Fjöldi')
+
+plot_row <- plot_grid(graph1, graph2)
+title <- plot_grid(ggdraw() + draw_label('Kaupverð', fontface = 'bold'), 
+                   ggdraw() + draw_label('Fermetrar', fontface = 'bold'))
+
+plot_grid(title, plot_row, ncol=1, rel_heights = c(0.1, 1))
+```
+
+
+### Fjöldi eigna eftir hverfum og tegundum
+
+```{r, fig.align='center', fig.width=8, warning=FALSE, message=FALSE}
+hj %>% 
+  group_by(matssvaedi, teg_eign_s_i) %>% 
+  summarize(n = n(), na.rm=TRUE) %>%
+  ggplot(aes(x=matssvaedi, y = n, fill=teg_eign_s_i)) + 
+  xlab('Hverfi') + ylab('Heildarfjöldi Eigna') + labs(fill='Eignartegund') + geom_bar(stat="identity", position='dodge')
+```
+
+### Fermetraverð eigna eftir tegundum eigna
+
+```{r, fig.align='center', fig.width=8, warning=FALSE, message=FALSE}
+hj %>% ggplot(aes(x = teg_eign_s_i, y = fermetraverd)) + 
+        geom_boxplot() + xlab('Gerð eigna') + ylab('Fermetraverð (þús.kr)')
+```
+
+### Stærð eigna & kaupverð skipt upp eftir hverfum
+
+```{r, fig.align='center', fig.width=9, warning=FALSE, message=FALSE}
+hj %>% group_by(matssvaedi) %>%
+  summarize(kaupverd, birtm2, teg_eign_s_i, na.RM=TRUE) %>%
+  ggplot(aes(x = kaupverd, y = birtm2, color=teg_eign_s_i)) + geom_point() + 
+  facet_grid(rows = vars(matssvaedi)) + xlab('Kaupverð (þús. kr)') + ylab('Stærð (m^2)') + labs(color='Tegund Eigna') + 
+  xlim(5000, 100000)
+```
+
+# Hluti 3 - Töflur
+
+### Fjöldi eigna í Hafnarfirði, Kópavogi og Seltjarnarnesi eftir gerð eigna
+```{r, fig.align='center'}
+
+hj2 <- hj %>% 
+  group_by(matssvaedi, "Tegund Eigna" = teg_eign_s_i) %>% 
+  summarize(Fjöldi = n())
+
+hj_pivot <- hj2 %>%
+  pivot_wider(names_from = matssvaedi, values_from = Fjöldi)
+knitr::kable(hj_pivot, align = "c")
+```

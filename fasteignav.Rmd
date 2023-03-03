@@ -5,7 +5,7 @@ date: "2023-02-22"
 ---
 
 ```
-@Author: Halldór Jens Vilhjálmsson hjv6@hi.is
+@Author: Halldór Jens Vilhjálmsson - hjv6@hi.is
 @Author: Jakob Þór Gunnarsson - jtg3@hi.is
 ```
 # Hluti 1 - Gagnamöndl

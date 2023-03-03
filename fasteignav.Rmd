@@ -26,16 +26,12 @@ library(cowplot)
 hj <- read.csv("husnaedisverd_2017_21.csv", sep=";")
 hj <- hj %>% mutate(teg_eign = factor(teg_eign))
 glimpse(hj)
-summary(hj)
 ```
-
-Skrifa hér um innlestur og breyt
 
 ## Svæðisskipting
 ```{r Svæðisskipting}
 hverfi <- c(400, 320, 600)
 hj <- filter(hj, matssvaedi%in%hverfi)
-summary(hj)
 ```
 
 Við ákváðum að nota 400, 540, og 600. Við breyttum svo gerð þeirra í flokkabreytu með viðeigandi nöfnum.
@@ -44,28 +40,22 @@ Við ákváðum að nota 400, 540, og 600. Við breyttum svo gerð þeirra í fl
 ```{r FM}
 hj <- hj %>%
       mutate(fermetraverd = kaupverd/birtm2)
-glimpse(hj)
 ```
-
-Skrifa eh hérna, muna fm er í þús kr
 
 ## Tegund Fasteigna
 ```{R Tegund Fasteigna}
-summary(hj)
 hj <- hj %>% mutate(teg_eign_s_i = 
                       fct_recode(teg_eign, 
                                  Sérbýli = 'Einbýlishús', 
                                  Sérbýli = 'Parhús', 
                                  Sérbýli = 'Raðhús', 
                                  Íbúð = 'Íbúðareign'))
-summary(hj)
 ```
 
 ## Endurnefnd Hverfi
 ```{R hverfi}
 hj$matssvaedi <- factor(hj$matssvaedi, levels=hverfi,
             labels = c('Seltjarnarsnes', 'Kópavogur', 'Hafnafjörður'))
-summary(hj)
 ```
 
 # Hluti 2 - Myndræn Framsetning
@@ -114,3 +104,62 @@ hj %>% group_by(matssvaedi) %>%
   facet_grid(rows = vars(matssvaedi)) + xlab('Kaupverð (þús. kr)') + ylab('Stærð (m^2)') + labs(color='Tegund Eigna') + 
   xlim(5000, 100000)
 ```
+
+# Hluti 3 - Töflur 
+
+## Fjöldi mánaða sem ná yfir samanlagt meðaltal fjölda sólskinsstunda í mánuði, fyrir Reykjavík og Akureyri
+```{R, message=FALSE, warning=FALSE}
+hj %>% group_by(matssvaedi, teg_eign_s_i) %>%
+    count() %>% summarise(n) %>% kable(align='c', col.names=c('Matshverfi', 'Tegund Eigna', 'Fjöldi')) %>%
+   kable_styling("striped", full_width = F)
+```
+
+## Hlutfall tegund eigna eftir matssvæði
+```{R, message=FALSE, warning=FALSE}
+hj %>% group_by(matssvaedi, teg_eign_s_i) %>%
+    count() %>% 
+    summarise(
+      n
+      ) %>% 
+    mutate(rel.freq = n / sum(n)) %>%
+    kable(align='c', col.names=c('Matshverfi', 'Tegund Eigna', 'Fjöldi', 'Ratio')) %>%
+   kable_styling("striped", full_width = F)
+```
+
+## Fasteignaverð
+```{R, message=FALSE, warning=FALSE}
+hj %>% group_by(matssvaedi, teg_eign_s_i) %>%
+  summarise(
+    n = n(),
+    medal = mean(fermetraverd, na.rm=TRUE),
+    midg = median(fermetraverd, na.rm=TRUE),
+    stadl = sd(fermetraverd, na.rm=TRUE)
+  ) %>% 
+  kable(align="c", col.names = c('Matssvæði','Tegund', 
+        'Fjöldi', 'Meðaltal', 'Miðgildi', 'Staðalfrávik')) %>% 
+  kable_styling('striped') %>%
+  add_header_above(c(' '=3, 'Fermetraverð'=3))
+```
+
+# Líkindafræði
+
+## Útreikningar
+``` {R}
+twoEinb <- dbinom(2, 3, 8/10)
+lsTwoEinb <- dbinom(1, 3, 8/10) + dbinom(0, 3, 8/10)
+
+lg190 <- 1-pnorm(190, 170, 20)
+john <- qnorm(0.9, 170, 20)
+```
+
+## Texti m/ útreikningum.
+
+**Gerum nú ráð fyrir að við séum að vinna með hverfi á stórreykjavíkursvæðinu þar sem 20% eigna eru einbýlishús. Hugsum okkur nú að við veljum 3 eignir í hverfinu af handahófi.**
+
+* Líkurnar á því að tvær eignir séu einbýlishús eru `r twoEinb`.
+* Líkurnar á því að færri en tvær eignir séu einbýlishús eru `r lsTwoEinb`.
+
+**Gerum nú ráð fyrir að stærð einbýlishúsa í hverfinu fylgi normaldreifingu með meðaltal 170 fm og staðalfrávik 20 fm.**
+
+* Líkurnar á því að eign, sem er valin að handahófi, sé stærri en 190 $fm^2$ eru `r lg190`.
+* Til þess að Jonni sé í hóp þeirra 10% með stærstu eignirnar, þarf húsið hans að vera `r john` $fm^2$.

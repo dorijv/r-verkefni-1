@@ -1,0 +1,116 @@
+---
+title: "fasteignav"
+output: html_document
+date: "2023-04-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Hlöðum inn pökkum
+```{r Pakkar, message=FALSE, warning=FALSE}
+library(readr)
+library(dplyr)
+library(knitr)
+library(tidyverse)
+library(kableExtra)
+library(ggplot2)
+library(cowplot)
+```
+
+## Innlestur 
+```{r Innlestur gagna, message=FALSE, warning=FALSE}
+hj <- read.csv("husnaedisverd_2017_21.csv", sep=";")
+hj <- hj %>% mutate(teg_eign = factor(teg_eign))
+glimpse(hj)
+```
+
+## Svæðisskipting
+```{r Svæðisskipting}
+hverfi <- c(400, 320, 600)
+hj <- filter(hj, matssvaedi%in%hverfi)
+```
+
+## Fermetraverð
+```{r FM}
+hj <- hj %>%
+      mutate(fermetraverd = kaupverd/birtm2)
+```
+
+## Tegund Fasteigna
+```{R Tegund Fasteigna}
+hj <- hj %>% mutate(teg_eign_s_i = 
+                      fct_recode(teg_eign, 
+                                 Sérbýli = 'Einbýlishús', 
+                                 Sérbýli = 'Parhús', 
+                                 Sérbýli = 'Raðhús', 
+                                 Íbúð = 'Íbúðareign'))
+```
+
+## Endurnefnd Hverfi
+```{R hverfi}
+hj$matssvaedi <- factor(hj$matssvaedi, levels=hverfi,
+            labels = c('Seltjarnarsnes', 'Kópavogur', 'Hafnafjörður'))
+```
+
+```{R rand}
+set.seed(69)
+urtak <- sample_n(hj, 400)
+```
+
+## Fjöldi eigna eftir hverfum og tegundum
+
+```{r, fig.align='center', fig.width=8, warning=FALSE, message=FALSE}
+urtak %>% 
+  group_by(matssvaedi, teg_eign_s_i) %>% 
+  summarize(n = n(), na.rm=TRUE) %>%
+  ggplot(aes(x=matssvaedi, y = n, fill=teg_eign_s_i)) + 
+  xlab('Hverfi') + ylab('Heildarfjöldi Eigna') + labs(fill='Eignartegund') + geom_bar(stat="identity", position='dodge')
+```
+
+## Hlutfall tegund eigna eftir matssvæði
+```{R, message=FALSE, warning=FALSE}
+urtak %>% group_by(matssvaedi, teg_eign_s_i) %>%
+    count() %>% 
+    summarise(
+      n
+      ) %>% 
+    mutate(rel.freq = n / sum(n)) %>%
+    kable(align='c', col.names=c('Matshverfi', 'Tegund Eigna', 'Fjöldi', 'Ratio')) %>%
+   kable_styling("striped", full_width = F)
+```
+
+## samb teg hverf
+```{R, message=FALSE, warning=FALSE}
+prop.table(table(urtak$matssvaedi, urtak$teg_eign_s_i)) %>%
+  chisq.test()
+```
+
+VANTAR UMFJ 
+fra edbook:
+Könnum nú hvort samband sé á milli námskeiðs og líkamsræktarástundunar. Við byrjum á að búa til töflu mældrar tíðni:
+
+chisq.test(table(puls$namskeid,puls$likamsraektf))
+##
+##  Pearson's Chi-squared test
+##
+## data:  table(puls$namskeid, puls$likamsraektf)
+## X-squared = 4.1576, df = 2, p-value = 0.1251
+Hér sést að prófstærðin er 4.1576, sem fylgir kí-kvaðrat prófi með 2 frígráður og p-gildi tilgátuprófsins er 0.1251.
+
+Munið að til þess að geta notað kí-kvaðrat prófið þurfa allar tölurnar í væntitíðnitöflunni að vera stærri en 5. Við getum fengið væntitíðnitöflu út úr R með að vista það sem chisq.test() aðferðin skilar sem hlut (hann má heita hvað sem er) og draga svo expected hlutann fram:
+
+kikv1<-chisq.test(table(puls$namskeid,puls$likamsraektf))
+kikv1$expected
+##
+##              Lítil  Miðlungs     Mikil
+##   LAN203  31.19099  70.08798  69.72103
+##   STAE209 53.80901 120.91202 120.27897
+Ef einhverjar tölur eru minni en fimm í væntitíðnitöflunni varar R okkur við. Sjáum til dæmis hvað gerist ef við viljum skoða samband reykinga og hreyfingar fyrir eingöngu þá nemendur sem sátu námskeiðið árið 2013:
+
+
+
+
+
+

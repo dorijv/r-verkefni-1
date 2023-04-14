@@ -173,8 +173,27 @@ t.test(hj$fermetraverd~hj$staerd150)
 
 ```
 
+# Hluti 4
 
+```{r}
+ggplot(urtak, aes(x=matssvaedi, y=fermetraverd)) + 
+  geom_boxplot() +
+  xlab('Matssvæði') + ylab('Fermetraverð (þús.kr)')
+```
 
+```{r}
+lm(fermetraverd ~ matssvaedi, data=hj) %>%
+  anova()
+```
+```{r}
+ggplot(hj, aes(x = birtm2, y = kaupverd)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+```
 
+Eitt algengt aðhvarfslíkan sem lýsir sambandi milli stærðar og kaupverðs eigna er einfalt línulegt aðhvarfslíkan (simple linear regression). Með þessu líkani er hægt að spá fyrir um kaupverð út frá stærð eignar. Skurðpunktur líkansins táknar grunnkaupverð á eigninni, sem er ekki háð stærð hennar. Hallatalan táknar breytu sem lýsir hversu mikið kaupverð eykst eftir einni aukinni einingu í stærð eignar.
 
-
+```{r}
+lm(kaupverd ~ birtm2, data = hj) %>%
+  summary()
+```

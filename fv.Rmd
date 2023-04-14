@@ -36,6 +36,12 @@ hj <- filter(hj, matssvaedi%in%hverfi)
 ```{r FM}
 hj <- hj %>%
       mutate(fermetraverd = kaupverd/birtm2)
+
+fermetraverd <- hj$kaupverd/hj$birtm2 ## ekki viss hvort þetta þurfi eða hvort þetta sé rétt, stendur bara í hluta 1 í verkefnalýsingu
+
+## d) Búið til nýja breytu í gagnarammanum ykkar sem inniheldur fermetraverð eignanna, nefnið breytuna fermetraverd
+
+
 ```
 
 ## Tegund Fasteigna
@@ -55,6 +61,7 @@ hj$matssvaedi <- factor(hj$matssvaedi, levels=hverfi,
 ```
 
 ```{R rand}
+#Hluti 1 - g
 set.seed(69)
 urtak <- sample_n(hj, 400)
 ```
@@ -79,12 +86,36 @@ urtak %>% group_by(matssvaedi, teg_eign_s_i) %>%
     mutate(rel.freq = n / sum(n)) %>%
     kable(align='c', col.names=c('Matshverfi', 'Tegund Eigna', 'Fjöldi', 'Ratio')) %>%
    kable_styling("striped", full_width = F)
+
+## eiga ekki að vera tvær töflur? þ.e. ein fyrir fjölda eigna í hverfunum þremur eftir gerð eigna
+## og ein sem sýnir hlutfall sérbýla og íbúða í hverfunum þremur. - JÞG
 ```
 
 ## samb teg hverf
 ```{R, message=FALSE, warning=FALSE}
+# Hluti 2 - j
 prop.table(table(urtak$matssvaedi, urtak$teg_eign_s_i)) %>%
   chisq.test()
+
+
+test <- chisq.test(table(urtak$matssvaedi, urtak$teg_eign_s_i))
+test$expected
+
+test_stat <- test$statistic
+test_p <- test$p.value
+df <- test$parameter
+
+nidurstada <- paste("Niðurstaða úr kí-kvaðrat prófi skilar prófstærðinni", test_stat,
+                    "með", df, "frígráðum. P-gildið okkar hér er", test_p, ".",
+                    "Því", ifelse(test_p < 0.05, "höfnum við", "höfum við ekki nægjanleg gögn til að hafna"),
+                    "núlltilgátunni með α = 0.05")
+
+
+
+nidurstada
+# Þetta var bara test, ég veit ekki hvort þetta sé rétt útfærsla - en það er hægt að nota sömu aðferðarfræði
+# til að klára þennan lið - JÞG
+
 ```
 
 VANTAR UMFJ 
@@ -108,6 +139,20 @@ kikv1$expected
 ##   LAN203  31.19099  70.08798  69.72103
 ##   STAE209 53.80901 120.91202 120.27897
 Ef einhverjar tölur eru minni en fimm í væntitíðnitöflunni varar R okkur við. Sjáum til dæmis hvað gerist ef við viljum skoða samband reykinga og hreyfingar fyrir eingöngu þá nemendur sem sátu námskeiðið árið 2013:
+
+
+## Tilgátupróf um meðalfermetraverð fasteigna - Í VINNSLU - JÞG
+```{R, message=FALSE, warning=FALSE}
+
+## er s.s. að finna meðalfermetraverð fyrir fasteign eftir tegund, en það á sennilega ekki að skýra
+## breyturnar eins og ég geri hér
+
+## á eftir að framkvæma tilgátupróf
+
+medalSerb <- mean(subset(hj, teg_eign_s_i == "Sérbýli")$fermetraverd, na.rm = TRUE)
+medalIb <- mean(subset(hj, teg_eign_s_i == "Íbúð")$fermetraverd, na.rm = TRUE)
+
+```
 
 
 

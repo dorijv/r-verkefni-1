@@ -149,8 +149,27 @@ Ef einhverjar tölur eru minni en fimm í væntitíðnitöflunni varar R okkur v
 
 ## á eftir að framkvæma tilgátupróf
 
-medalSerb <- mean(subset(hj, teg_eign_s_i == "Sérbýli")$fermetraverd, na.rm = TRUE)
-medalIb <- mean(subset(hj, teg_eign_s_i == "Íbúð")$fermetraverd, na.rm = TRUE)
+## "Þar sem þetta er ályktun um mismun tveggja meðaltala framkvæmum við tvihliða t-próf"
+
+
+## medalSerb <- mean(subset(hj, teg_eign_s_i == "Sérbýli")$fermetraverd, na.rm = TRUE)
+## medalIb <- mean(subset(hj, teg_eign_s_i == "Íbúð")$fermetraverd, na.rm = TRUE)
+
+
+## t-próf til að kanna muninn á meðalfermetraverði fasteigna eftir því hvort þær 
+## séu sérbýli eða íbúðir
+t.test(hj$fermetraverd~hj$teg_eign_s_i)
+## Vantar að setja tilgátur fram, sem og tilgreina viðeigandi gildi
+
+
+## búum til staerd150 breytu til að flokka eftir stærri og minni tegundum fasteigna
+hj <- hj %>% mutate(staerd150 = ifelse(birtm2 > 150,"Stærri", "Minni"))
+
+## t-próf til að kanna muninn á meðalfermetraverði fasteigna eftir því hvort þær 
+## séu stærri eða minni en 150 fermetrar
+t.test(hj$fermetraverd~hj$staerd150)
+
+
 
 ```
 
